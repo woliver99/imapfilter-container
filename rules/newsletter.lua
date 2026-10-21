@@ -8,6 +8,12 @@ return function(account, context)
     local target_folder = acc.newsletters_folder or 'Newsletters'
     local junk_folder = acc.junk_folder or 'Junk'
 
+    -- Ensure destination Newsletters folder exists on server
+    pcall(function()
+        account:create_mailbox(target_folder)
+        account:subscribe_mailbox(target_folder)
+    end)
+
     local function process_folder(folder_name)
         local mailbox = account[folder_name]
         if not mailbox then

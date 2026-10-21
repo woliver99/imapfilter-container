@@ -9,6 +9,8 @@ options.timeout = 120
 options.subscribe = true
 options.create = true
 options.expunge = true
+options.limit = 100
+options.range = 100
 
 -------------------------------------------------------------------------------
 -- Base64 Encoder (pure Lua, zero dependencies)

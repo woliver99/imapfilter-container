@@ -7,6 +7,11 @@ return function(account, context)
     local target_folder = 'Receipts'
     local mailbox = account.INBOX
 
+    pcall(function()
+        account:create_mailbox(target_folder)
+        account:subscribe_mailbox(target_folder)
+    end)
+
     local receipts = mailbox:contain_subject('Receipt') +
                      mailbox:contain_subject('Invoice') +
                      mailbox:contain_subject('Order Confirmation')
