@@ -79,14 +79,15 @@ docker compose logs -f
 
 ---
 
-## How Whitelisting Works
+## How Newsletters and Whitelisting Work
 
-Whitelisting is completely managed directly from your email app:
+The container automatically organizes newsletters into a clean, intuitive folder structure:
 
-1. A `Whitelist` folder is automatically maintained **inside** your `Newsletters` folder (`Newsletters/Whitelist`).
-2. When you want to whitelist a sender, **simply drag or move any received email from that sender into `Newsletters/Whitelist`**.
-3. On every run, the bot reads the `From:` headers of all emails in `Newsletters/Whitelist` and ensures their emails in `INBOX` and `Junk` are never touched or moved.
-4. **Strict Account Isolation**: Whitelist entries are isolated per account (Account 1's whitelist never affects Account 2).
+1. **`Newsletters`**: Newsletters discovered in your `INBOX` are moved here.
+2. **`Newsletters/Junk`**: Newsletters discovered in your spam/junk folder are moved here (zero deletions).
+3. **`Newsletters/Whitelist`**: Whitelisted senders. To whitelist a sender, **simply drag or move any email from that sender into `Newsletters/Whitelist`**.
+   * On every run, the bot extracts the sender addresses and ensures their emails are never moved out of `INBOX` or `Junk`.
+   * **Strict Account Isolation**: Whitelists are isolated per account.
 
 ---
 
@@ -94,8 +95,8 @@ Whitelisting is completely managed directly from your email app:
 
 Rule templates are standalone Lua files in [`rules/`](rules/):
 
-- **`whitelist`** (built-in): Extracts whitelisted senders from the `Whitelist` folder.
-- **`newsletter`** (built-in): Moves newsletters with `List-Unsubscribe` or `List-Id` from `INBOX` and `Junk` to `Newsletters` (zero deletions).
+- **`whitelist`** (built-in): Extracts whitelisted senders from `Newsletters/Whitelist`.
+- **`newsletter`** (built-in): Moves newsletters with `List-Unsubscribe` or `List-Id` from `INBOX` to `Newsletters` and from `Junk` to `Newsletters/Junk`.
 - **Custom Rules**: You can add any custom rule by placing a `.lua` file into `./rules/` and listing its name in `ACCOUNT_<N>_RULES`.
 
 ### Example Custom Rule (`rules/receipts.lua`)
@@ -130,8 +131,7 @@ Each account (`ACCOUNT_1_*`, `ACCOUNT_2_*`, up to `ACCOUNT_<N>_*`) supports the 
 | `ACCOUNT_<N>_SERVER` | `outlook.office365.com` | IMAP server hostname |
 | `ACCOUNT_<N>_PORT` | `993` | IMAP SSL port |
 | `ACCOUNT_<N>_SSL` | `auto` | SSL/TLS protocol version |
-| `ACCOUNT_<N>_NEWSLETTERS_FOLDER` | `Newsletters` | Destination folder for newsletters |
-| `ACCOUNT_<N>_JUNK_FOLDER` | `Junk` | Source junk/spam folder |
+| `ACCOUNT_<N>_JUNK_FOLDER` | `Junk` | Source junk/spam folder (Microsoft accounts typically use `Junk Email`; container logs will report candidates) |
 | `NTFY_URL` | *Optional* | Push notification URL (e.g. `https://ntfy.sh/my-topic`) |
 | `NTFY_TOKEN` | *Optional* | Bearer authentication token for protected ntfy topics |
 | `NTFY_ERROR_THRESHOLD` | `3` | Consecutive failures before sending an ntfy notification |

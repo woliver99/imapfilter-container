@@ -3,22 +3,23 @@
 -- Rule template: Scans the Whitelist folder and extracts sender email addresses
 -------------------------------------------------------------------------------
 return function(account, context)
-    local acc = context.acc_config or {}
-    local newsletters_folder = acc.newsletters_folder or 'Newsletters'
-    local folder_name = newsletters_folder .. '/Whitelist'
+    local folder_name = 'Newsletters/Whitelist'
 
     -- Ensure parent Newsletters folder and Whitelist subfolder exist on server
     pcall(function()
-        account:create_mailbox(newsletters_folder)
-        account:subscribe_mailbox(newsletters_folder)
+        account:create_mailbox('Newsletters')
+        account:subscribe_mailbox('Newsletters')
         account:create_mailbox(folder_name)
         account:subscribe_mailbox(folder_name)
     end)
 
     local mailbox = account[folder_name]
     if not mailbox then
+        print(string.format('   [whitelist] Unable to access folder "%s".', folder_name))
         return
     end
+
+    print(string.format('   [whitelist] Inspecting whitelist folder "%s"...', folder_name))
 
     -- Select all messages in the Whitelist folder
     local ok, messages = pcall(function()
