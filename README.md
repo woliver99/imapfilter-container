@@ -83,9 +83,9 @@ docker compose logs -f
 
 Whitelisting is completely managed directly from your email app:
 
-1. A `Whitelist` folder is automatically maintained on your email account.
-2. When you want to whitelist a sender, **simply drag or move any received email from that sender into the `Whitelist` folder**.
-3. On every run, the bot reads the `From:` headers of all emails in `Whitelist` and ensures their emails in `INBOX` and `Junk` are never touched or moved.
+1. A `Whitelist` folder is automatically maintained **inside** your `Newsletters` folder (`Newsletters/Whitelist`).
+2. When you want to whitelist a sender, **simply drag or move any received email from that sender into `Newsletters/Whitelist`**.
+3. On every run, the bot reads the `From:` headers of all emails in `Newsletters/Whitelist` and ensures their emails in `INBOX` and `Junk` are never touched or moved.
 4. **Strict Account Isolation**: Whitelist entries are isolated per account (Account 1's whitelist never affects Account 2).
 
 ---
@@ -132,7 +132,6 @@ Each account (`ACCOUNT_1_*`, `ACCOUNT_2_*`, up to `ACCOUNT_<N>_*`) supports the 
 | `ACCOUNT_<N>_SSL` | `auto` | SSL/TLS protocol version |
 | `ACCOUNT_<N>_NEWSLETTERS_FOLDER` | `Newsletters` | Destination folder for newsletters |
 | `ACCOUNT_<N>_JUNK_FOLDER` | `Junk` | Source junk/spam folder |
-| `ACCOUNT_<N>_WHITELIST_FOLDER` | `Whitelist` | Source whitelist folder |
 | `NTFY_URL` | *Optional* | Push notification URL (e.g. `https://ntfy.sh/my-topic`) |
 | `NTFY_TOKEN` | *Optional* | Bearer authentication token for protected ntfy topics |
 | `NTFY_ERROR_THRESHOLD` | `3` | Consecutive failures before sending an ntfy notification |

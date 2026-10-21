@@ -4,11 +4,15 @@
 -------------------------------------------------------------------------------
 return function(account, context)
     local acc = context.acc_config or {}
-    local folder_name = acc.whitelist_folder or 'Whitelist'
+    local newsletters_folder = acc.newsletters_folder or 'Newsletters'
+    local folder_name = newsletters_folder .. '/Whitelist'
 
-    -- Ensure Whitelist folder exists on server
+    -- Ensure parent Newsletters folder and Whitelist subfolder exist on server
     pcall(function()
+        account:create_mailbox(newsletters_folder)
+        account:subscribe_mailbox(newsletters_folder)
         account:create_mailbox(folder_name)
+        account:subscribe_mailbox(folder_name)
     end)
 
     local mailbox = account[folder_name]

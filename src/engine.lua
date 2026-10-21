@@ -343,9 +343,7 @@ while true do
                         os.getenv(string.format('ACCOUNT%d_JUNK_FOLDER', idx)) or
                         'Junk'
 
-    local whitelist_folder = os.getenv(string.format('ACCOUNT_%d_WHITELIST_FOLDER', idx)) or
-                            os.getenv(string.format('ACCOUNT%d_WHITELIST_FOLDER', idx)) or
-                            'Whitelist'
+    local whitelist_folder = newsletters_folder .. '/Whitelist'
 
     table.insert(accounts, {
         id = idx,
