@@ -32,10 +32,15 @@ return function(account, context)
 
         print(string.format('   [newsletter] Scanning "%s" for newsletters...', source_folder))
 
-        -- Match messages with List-Unsubscribe or List-Id headers
+        -- Match messages with List-Unsubscribe, List-Id headers, or "unsubscribe" in body (plain/HTML + base64)
         local ok, candidates = pcall(function()
             return mailbox:contain_field('List-Unsubscribe', '') +
-                   mailbox:contain_field('List-Id', '')
+                   mailbox:contain_field('List-Id', '') +
+                   mailbox:contain_body('unsubscribe') +
+                   mailbox:contain_body('VW5zdWJzY3JpYmU') +
+                   mailbox:contain_body('dW5zdWJzY3JpYmU') +
+                   mailbox:contain_body('Vuc3Vic2NyaWJl') +
+                   mailbox:contain_body('uc3Vic2NyaWJl')
         end)
 
         if not ok then

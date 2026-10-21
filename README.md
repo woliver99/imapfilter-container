@@ -96,7 +96,7 @@ The container automatically organizes newsletters into a clean, intuitive folder
 Rule templates are standalone Lua files in [`rules/`](rules/):
 
 - **`whitelist`** (built-in): Extracts whitelisted senders from `Newsletters/Whitelist`.
-- **`newsletter`** (built-in): Moves newsletters with `List-Unsubscribe` or `List-Id` from `INBOX` to `Newsletters` and from `Junk` to `Newsletters/Junk`.
+- **`newsletter`** (built-in): Moves newsletters & promotional spam (matching `List-Unsubscribe`, `List-Id`, or "unsubscribe" in body text and base64 payloads) from `INBOX` to `Newsletters` and from spam/junk to `Newsletters/Junk`.
 - **Custom Rules**: You can add any custom rule by placing a `.lua` file into `./rules/` and listing its name in `ACCOUNT_<N>_RULES`.
 
 ### Example Custom Rule (`rules/receipts.lua`)
