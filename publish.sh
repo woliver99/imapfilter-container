@@ -57,8 +57,15 @@ ok "Container image built successfully."
 info "Checking authentication with ${REGISTRY}..."
 
 login_to_registry() {
-    # If GitHub CLI is available and authenticated, use it seamlessly
+    # If GitHub CLI is available and authenticated, check scopes and use token
     if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
+        # Check if write:packages scope is present
+        if ! gh auth status 2>&1 | grep -q 'write:packages'; then
+            warn "Your GitHub CLI (gh) token is missing the 'write:packages' scope required for ghcr.io."
+            info "Refreshing gh credentials with 'write:packages' scope..."
+            gh auth refresh -h github.com --scopes read:packages,write:packages
+        fi
+
         info "Authenticating with ${REGISTRY} using GitHub CLI token..."
         gh auth token | "${CONTAINER_CLI}" login "${REGISTRY}" -u "${REPO_OWNER}" --password-stdin
         return 0
@@ -108,3 +115,7 @@ if [[ -n "${VERSION}" ]]; then
     echo -e "Image: ${BOLD}${FULL_IMAGE}:${VERSION}${NC}"
 fi
 echo -e "Package URL: ${BLUE}https://github.com/${REPO_OWNER}/${IMAGE_NAME}/pkgs/container/${IMAGE_NAME}${NC}"
+echo
+info "If the package does not yet display on your repository page, connect it once in GitHub:"
+info "1. Visit: https://github.com/users/${REPO_OWNER}/packages/container/package/${IMAGE_NAME}"
+info "2. On the right sidebar under 'Repository source', click 'Connect repository' -> select '${REPO_OWNER}/${IMAGE_NAME}'"
