@@ -1,0 +1,11 @@
+services:
+  imapfilter:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: imapfilter
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - ./config.lua:/config/config.lua:ro

@@ -1,0 +1,3 @@
+[submodule "src/imapfilter"]
+	path = src/imapfilter
+	url = https://github.com/lefcha/imapfilter.git
