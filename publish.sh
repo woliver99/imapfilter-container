@@ -57,17 +57,11 @@ ok "Container image built successfully."
 info "Checking authentication with ${REGISTRY}..."
 
 login_to_registry() {
-    # If GitHub CLI is available and authenticated, check scopes and use token
-    if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
-        # Check if write:packages scope is present
-        if ! gh auth status 2>&1 | grep -q 'write:packages'; then
-            warn "Your GitHub CLI (gh) token is missing the 'write:packages' scope required for ghcr.io."
-            info "Refreshing gh credentials with 'write:packages' scope..."
-            gh auth refresh -h github.com --scopes read:packages,write:packages
-        fi
-
-        info "Authenticating with ${REGISTRY} using GitHub CLI token..."
-        gh auth token | "${CONTAINER_CLI}" login "${REGISTRY}" -u "${REPO_OWNER}" --password-stdin
+    # If environment variable token is set, use it directly
+    local env_token="${CR_PAT:-${GITHUB_TOKEN:-${GHCR_TOKEN:-}}}"
+    if [[ -n "${env_token}" ]]; then
+        info "Authenticating with ${REGISTRY} using environment token..."
+        echo "${env_token}" | "${CONTAINER_CLI}" login "${REGISTRY}" -u "${REPO_OWNER}" --password-stdin
         return 0
     fi
 

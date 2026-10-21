@@ -27,6 +27,7 @@ LABEL org.opencontainers.image.licenses="MIT"
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
+    curl \
     liblua5.4-0 \
     libssl3 \
     libpcre2-8-0 \

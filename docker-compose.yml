@@ -10,3 +10,7 @@ services:
       - .env
     volumes:
       - ./rules:/rules:ro
+      - imapfilter-tokens:/tokens
+
+volumes:
+  imapfilter-tokens:
