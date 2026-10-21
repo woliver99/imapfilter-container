@@ -1,0 +1,18 @@
+-------------------------------------------------------------------------------
+-- rules/receipts.lua.example
+-- Example custom rule template: Routes order confirmations & receipts to Receipts
+-- Rename to "receipts.lua" and add "receipts" to ACCOUNT_<N>_RULES in .env to use!
+-------------------------------------------------------------------------------
+return function(account, context)
+    local target_folder = 'Receipts'
+    local mailbox = account.INBOX
+
+    local receipts = mailbox:contain_subject('Receipt') +
+                     mailbox:contain_subject('Invoice') +
+                     mailbox:contain_subject('Order Confirmation')
+
+    if receipts and #receipts > 0 then
+        print(string.format('   [receipts] Moving %d receipt(s) from INBOX -> %s', #receipts, target_folder))
+        receipts:move_messages(account[target_folder])
+    end
+end

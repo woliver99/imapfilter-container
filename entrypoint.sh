@@ -1,6 +1,7 @@
 #!/bin/sh
 set -eu
 
+DEFAULT_ENGINE="/usr/local/share/imapfilter/engine.lua"
 CONFIG_FILE="${IMAPFILTER_CONFIG:-/config/config.lua}"
 INTERVAL="${CHECK_INTERVAL:-600}"
 
@@ -15,12 +16,20 @@ term_handler() {
 
 trap term_handler TERM INT
 
-log "Starting email cleanup loop (interval: ${INTERVAL}s)..."
-
+# Resolve configuration file (user override vs built-in modular engine)
 if [ ! -f "$CONFIG_FILE" ]; then
-    log "ERROR: Configuration file not found at $CONFIG_FILE"
-    exit 1
+    if [ -f "$DEFAULT_ENGINE" ]; then
+        CONFIG_FILE="$DEFAULT_ENGINE"
+        log "Using built-in modular rule engine ($CONFIG_FILE)"
+    else
+        log "ERROR: Configuration file not found at $CONFIG_FILE"
+        exit 1
+    fi
+else
+    log "Using mounted configuration file ($CONFIG_FILE)"
 fi
+
+log "Starting email cleanup loop (interval: ${INTERVAL}s)..."
 
 while true; do
     log "Running imapfilter..."

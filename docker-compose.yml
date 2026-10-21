@@ -9,4 +9,4 @@ services:
     env_file:
       - .env
     volumes:
-      - ./config.lua:/config/config.lua:ro
+      - ./rules:/rules:ro

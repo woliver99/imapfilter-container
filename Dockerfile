@@ -35,6 +35,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY --from=builder /usr/local/bin/imapfilter /usr/local/bin/imapfilter
 COPY --from=builder /usr/local/share/imapfilter /usr/local/share/imapfilter
 
+# Copy built-in modular engine and rule templates
+COPY src/engine.lua /usr/local/share/imapfilter/engine.lua
+COPY rules /usr/local/share/imapfilter/rules
+
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
