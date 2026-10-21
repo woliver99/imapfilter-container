@@ -1,5 +1,6 @@
 services:
   imapfilter:
+    image: ghcr.io/woliver99/imapfilter-container:latest
     build:
       context: .
       dockerfile: Dockerfile

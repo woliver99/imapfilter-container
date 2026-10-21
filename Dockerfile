@@ -21,6 +21,10 @@ RUN make -j$(nproc) && make install
 # Stage 2: Minimal runtime image
 FROM debian:bookworm-slim
 
+LABEL org.opencontainers.image.source="https://github.com/woliver99/imapfilter-container"
+LABEL org.opencontainers.image.description="Self-hosted email cleanup service powered by imapfilter"
+LABEL org.opencontainers.image.licenses="MIT"
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     liblua5.4-0 \

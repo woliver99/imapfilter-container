@@ -1,16 +1,20 @@
 # imapfilter-container
 
-A lightweight, local-first, self-hosted Dockerized email cleanup service powered by [`imapfilter`](https://github.com/lefcha/imapfilter). It connects to Microsoft Hotmail / Outlook over secure IMAP (SSL/TLS) and automatically organizes newsletters into a dedicated folder while purging stale junk mail every 10 minutes.
+A lightweight, local-first, self-hosted Dockerized email cleanup service powered by [`imapfilter`](https://github.com/lefcha/imapfilter). It supports multiple email accounts simultaneously, connecting over secure IMAP (SSL/TLS) to automatically organize newsletters into dedicated folders and purge stale junk mail on a recurring schedule.
+
+Container images are published to [GitHub Packages](https://github.com/woliver99/imapfilter-container/pkgs/container/imapfilter-container) (`ghcr.io/woliver99/imapfilter-container`).
 
 ---
 
 ## Features
 
-- **Automated Newsletter Organization**: Routes incoming messages with `List-Unsubscribe` or `List-Id` headers from `INBOX` to `Newsletters`.
+- **Multi-Account Support**: Cleanly processes multiple independent email accounts (`ACCOUNT1_*`, `ACCOUNT2_*`, etc.) sequentially.
+- **Automated Newsletter Organization**: Routes incoming messages matching `List-Unsubscribe` or `List-Id` headers from `INBOX` to `Newsletters`.
 - **Junk Mail Retention Management**: Permanently purges messages in `Junk` older than 14 days (`options.expunge = true`).
-- **Foreground Daemon Loop**: Runs checks on a configurable schedule (default: 600 seconds / 10 minutes) with timestamped logs.
-- **Lean Multi-Stage Container**: Builds directly from the `imapfilter` source submodule on Debian Bookworm Slim with minimal runtime dependencies.
-- **Graceful Termination**: Handles `SIGTERM`/`SIGINT` signals for clean shutdown with Docker Compose.
+- **Failure Isolation**: Employs protected calls (`pcall`) per account so a transient network timeout on one account will not block remaining accounts.
+- **Configurable Daemon Loop**: Runs on a background schedule (default: 600 seconds / 10 minutes) with ISO/UTC timestamped logs.
+- **Lean Multi-Stage Container**: Based on Debian Bookworm Slim with minimal runtime dependencies.
+- **Graceful Termination**: Intercepts `SIGTERM`/`SIGINT` signals for immediate, clean shutdown with Docker Compose.
 
 ---
 
@@ -25,14 +29,14 @@ A lightweight, local-first, self-hosted Dockerized email cleanup service powered
 
 ### 1. Clone Repository (with Submodules)
 
-Clone the repository and its `imapfilter` submodule in a single command:
+Clone the repository and its `imapfilter` source submodule:
 
 ```bash
-git clone --recurse-submodules https://github.com/your-username/imapfilter-container.git
+git clone --recurse-submodules git@github.com:woliver99/imapfilter-container.git
 cd imapfilter-container
 ```
 
-If you previously cloned the repository without `--recurse-submodules`, initialize and update the submodule:
+If you previously cloned without `--recurse-submodules`, initialize the submodule:
 
 ```bash
 git submodule update --init --recursive
@@ -40,18 +44,18 @@ git submodule update --init --recursive
 
 ---
 
-### 2. Generate a Microsoft App Password
+### 2. Generate Microsoft App Passwords
 
-If Two-Step Verification (2FA) is enabled on your Microsoft / Hotmail / Outlook account, standard account passwords will not work for IMAP. You must create a dedicated App Password:
+If Two-Step Verification (2FA) is enabled on your Microsoft / Hotmail / Outlook account, standard account passwords will not work for IMAP. You must create a dedicated App Password for each account:
 
 1. Sign in to your Microsoft Account security dashboard: [https://account.live.com/proofs/manage/additional](https://account.live.com/proofs/manage/additional).
 2. Scroll to the **App passwords** section.
 3. Click **Create a new app password**.
-4. Copy the generated 16-character password (e.g., `abcd efgh ijkl mnop`). Remove spaces when pasting it into your configuration.
+4. Copy the generated 16-character password (remove spaces when pasting).
 
 ---
 
-### 3. Configure Environment
+### 3. Configure Environment (`.env`)
 
 Copy the example environment file:
 
@@ -59,31 +63,65 @@ Copy the example environment file:
 cp .env.example .env
 ```
 
-Edit `.env` with your email and generated App Password:
+Configure your accounts in `.env`:
 
 ```env
-HOTMAIL_USER=your_email@hotmail.com
-HOTMAIL_PASS=your_app_password_here
+# Primary Account
+ACCOUNT1_USER=personal_email@hotmail.com
+ACCOUNT1_PASS=your_app_password_here
+
+# Secondary Account (optional)
+ACCOUNT2_USER=work_email@outlook.com
+ACCOUNT2_PASS=your_second_app_password_here
+
+# Service Check Interval (in seconds, default: 600s = 10 minutes)
+CHECK_INTERVAL=600
+```
+
+#### Optional Per-Account Overrides
+
+You can customize individual account parameters if needed:
+
+```env
+# Custom display name in logs
+ACCOUNT1_NAME="Personal Hotmail"
+
+# Custom IMAP host and port (defaults to outlook.office365.com:993)
+ACCOUNT1_SERVER=outlook.office365.com
+ACCOUNT1_PORT=993
+ACCOUNT1_SSL=auto
+
+# Custom folder targets and retention days
+ACCOUNT1_NEWSLETTERS_FOLDER=Newsletters
+ACCOUNT1_JUNK_FOLDER=Junk
+ACCOUNT1_JUNK_DAYS=14
 ```
 
 > [!CAUTION]
-> Never commit your `.env` file to version control. The included `.gitignore` already ignores `.env`.
+> Never commit your `.env` file to version control. The included `.gitignore` protects secrets from being staged.
 
 ---
 
 ### 4. Build and Start Service
 
-Build the Docker image and start the container in detached mode:
+Build the Docker image and start the container:
 
 ```bash
 docker compose up -d --build
+```
+
+Alternatively, to run using the prebuilt image published on GitHub Packages without local compilation:
+
+```bash
+docker compose pull
+docker compose up -d
 ```
 
 ---
 
 ### 5. Verify Operation
 
-Inspect the container logs to monitor execution and verify scheduled runs:
+Follow the container logs to monitor cleanup runs:
 
 ```bash
 docker compose logs -f
@@ -91,13 +129,17 @@ docker compose logs -f
 
 Sample output:
 ```text
-2026-10-21 19:25:00 UTC [imapfilter] Starting email cleanup loop (interval: 600s)...
-2026-10-21 19:25:00 UTC [imapfilter] Running imapfilter...
-2026-10-21 19:25:02 UTC [imapfilter] imapfilter run completed successfully.
-2026-10-21 19:25:02 UTC [imapfilter] Sleeping for 600s until next check...
+2026-10-21 19:40:00 UTC [imapfilter] Starting email cleanup loop (interval: 600s)...
+2026-10-21 19:40:00 UTC [imapfilter] Running imapfilter...
+==> Processing Account 1 (personal@hotmail.com) [personal@hotmail.com@outlook.office365.com:993]...
+==> Completed processing Account 1 (personal@hotmail.com).
+==> Processing Account 2 (work@outlook.com) [work@outlook.com@outlook.office365.com:993]...
+==> Completed processing Account 2 (work@outlook.com).
+2026-10-21 19:40:05 UTC [imapfilter] imapfilter run completed successfully.
+2026-10-21 19:40:05 UTC [imapfilter] Sleeping for 600s until next check...
 ```
 
-To stop the container:
+To stop the service:
 
 ```bash
 docker compose down
@@ -105,27 +147,31 @@ docker compose down
 
 ---
 
-## Customizing Filter Rules
+## Publishing to GitHub Packages
 
-The filtering rules reside in [`config.lua`](config.lua) and are mounted read-only into `/config/config.lua:ro`.
-
-### Default Rules
-
-```lua
--- Move newsletters/promotions to "Newsletters" folder
-local newsletters = account.INBOX:contain_field('List-Unsubscribe', '') +
-                    account.INBOX:contain_field('List-Id', '')
-newsletters:move_messages(account['Newsletters'])
-
--- Delete junk older than 14 days
-local old_junk = account['Junk']:is_older(14)
-old_junk:delete_messages()
-```
-
-After modifying [`config.lua`](config.lua), restart the container to apply your changes:
+A dedicated script [`publish.sh`](publish.sh) is provided to build the container image and publish it directly to GitHub Packages (`ghcr.io`):
 
 ```bash
-docker compose restart
+# Build and publish 'latest' tag
+./publish.sh
+
+# Or publish with a specific version tag as well
+./publish.sh v1.0.0
+```
+
+The script will:
+1. Build the container image tagged as `ghcr.io/woliver99/imapfilter-container:latest` (and `v1.0.0` if specified).
+2. Authenticate to `ghcr.io` (via GitHub CLI if logged in, or prompting for a GitHub Personal Access Token with `write:packages` scope).
+3. Push the image to GitHub Packages.
+
+---
+
+## Pushing Code to GitHub
+
+To push your repository commits and branches to GitHub over SSH:
+
+```bash
+git push -u origin main
 ```
 
 ---
@@ -135,13 +181,14 @@ docker compose restart
 ```text
 imapfilter-container/
 ├── .dockerignore              # Docker build context exclusions
-├── .gitignore                 # Git ignore patterns (.env, logs, temp files)
-├── .gitmodules                # Git submodule configuration for imapfilter
-├── Dockerfile                 # Multi-stage Debian Bookworm build
-├── docker-compose.yml         # Container deployment specification
-├── entrypoint.sh              # Foreground loop runner with signal handling
-├── config.lua                 # imapfilter Lua configuration and filtering rules
-├── .env.example               # Example credentials template
+├── .gitignore                 # Git ignore rules (.env, logs, swap files)
+├── .gitmodules                # Submodule tracking for imapfilter
+├── Dockerfile                 # Multi-stage build with OCI metadata labels
+├── docker-compose.yml         # Container deployment configuration
+├── entrypoint.sh              # Loop runner with signal handling
+├── config.lua                 # Multi-account imapfilter logic
+├── publish.sh                 # Builds and publishes container to GitHub Packages
+├── .env.example               # Multi-account credentials template
 ├── README.md                  # Documentation and setup guide
 └── src/
     └── imapfilter/            # Upstream imapfilter submodule (Git)
